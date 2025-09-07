@@ -1,0 +1,155 @@
+<template>
+	<view class="page">
+		
+		<unicloud-map 
+			ref="map" 
+			:debug="false" 
+			loadtime="auto"
+			collection="opendb-poi" 
+			:where="where" 
+			:width="750" 
+			:height="heightCom" 
+			:latitude="latitude" 
+			:longitude="longitude" 
+			:scale="13"
+			:poi-maximum="100" 
+			:default-icon="defaultIcon" 
+			:custom-icons="customIcons" 
+			:enable-scroll="true"
+			:enable-zoom="true"
+			:show-compass="true"
+			@poitap="poitap"
+		></unicloud-map>
+
+		<view class="btn-box first">
+			<button @click="initData" size="mini" class="btn">初始化数据</button>
+			<button @click="show1" size="mini" class="btn">只显示门店</button>
+		</view>
+		<view class="btn-box">
+			<button @click="show2" size="mini" class="btn">只显示总部</button>
+			<button @click="show3" size="mini" class="btn">显示总部+门店</button>
+		</view>
+		
+	</view>
+</template>
+
+<script>
+	var timer;
+	const uniMapCo = uniCloud.importObject('uni-map-co', {
+		customUI: true
+	});
+	const db = uniCloud.database();
+	const _ = db.command;
+	const category = "static-001";
+	export default {
+		data() {
+			return {
+				latitude: 39.908823,
+				longitude: 116.39747,
+				where: {
+					category: category
+				}, // 查询条件，不支持字符串JQL形式，必须是对象形式
+				defaultIcon: "/static/icon/default.png", // 默认图标
+				// 自定义图标
+				customIcons: [
+					{ type: "门店", icon: "/static/icon/shop.png" },
+					{ type: "总部", icon: "/static/icon/headquarters.png" }
+				]
+			}
+		},
+		onLoad() {
+
+		},
+		methods: {
+			// 初始化测试数据
+			async initData() {
+				uni.showLoading({
+					title: "生成中...",
+					mask: true
+				});
+				try {
+					await uniMapCo.initStatic001();
+					await this.refresh();
+				} catch (err) {}
+				uni.hideLoading();
+			},
+			// 只显示门店
+			show1() {
+				this.where = {
+					category: category,
+					type: "门店"
+				};
+			},
+			// 只显示总部
+			show2() {
+				this.where = {
+					category: category,
+					type: "总部"
+				};
+			},
+			// 显示门店+总部
+			show3() {
+				this.where = {
+					category: category,
+					type: _.in(["门店", "总部"])
+				};
+			},
+			// 刷新地图
+			async refresh() {
+				await this.$refs.map.refresh({
+					needIncludePoints: true
+				});
+			},
+			// 监听 - 点击POI事件
+			poitap(e) {
+				let { poi } = e;
+				this.showActionSheet(poi);
+			},
+			// 导航弹窗
+			showActionSheet(poi) {
+				let itemList = ["导航到这里"];
+				uni.showActionSheet({
+					title: poi.title,
+					itemList: itemList,
+					success: (res) => {
+						let item = itemList[res.tapIndex];
+						if (item === "导航到这里") {
+							uni.openLocation({
+								type: 'gcj02',
+								latitude: poi.location.coordinates[1],
+								longitude: poi.location.coordinates[0],
+								name: poi.title,
+								address: poi.address
+							});
+						}
+					}
+				});
+			}
+		},
+		computed: {
+			heightCom() {
+				let systemInfo = uni.getSystemInfoSync();
+				return `${systemInfo.windowHeight - 100}px`;
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.page{
+		.btn-box{
+			margin: 10px;
+			/* #ifndef APP-NVUE */
+			display: flex;
+			/* #endif */
+			flex-direction: row;
+			.btn{
+				flex: 1;
+				margin: 0 5px;
+			}
+			&.first{
+				margin: 10px 10px 0 10px;
+			}
+		}
+	}
+</style>

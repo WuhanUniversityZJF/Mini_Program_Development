@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysPoiMapper">
+
+    <resultMap type="SysPoi" id="SysPoiResult">
+        <result property="id"       column="id"      />
+        <result property="poi_id"       column="poi_id"      />
+        <result property="name"       column="name"      />
+        <result property="type"     column="type"    />
+        <result property="img"     column="img"    />
+        <result property="descr"     column="descr"    />
+        <result property="latitude"        column="latitude"        />
+        <result property="longitude"        column="longitude"        />
+        <result property="state"  column="state"  />
+        <result property="state"  column="flag"  />
+    </resultMap>
+
+    <insert id="insertPoi" parameterType="SysPoi" useGeneratedKeys="true" keyProperty="poiId">
+        insert into sys_poi(poi_id,name,type,img,descr,latitude,longitude,state,flag)values(#{poi_id},
+                                                                                   #{name},#{type},#{img},#{desc},#{latitude},#{longitude},#{state},#{flag})
+    </insert>
+
+    <select id="queryPoi" resultType="SysPoi">
+        select id,poi_id, name, type, img, descr, latitude, longitude, state,flag
+        from sys_poi order by poi_id desc ,flag asc
+    </select>
+
+    <select id="typePoi" resultType="SysPoi" parameterType="SysSearch">
+        select id,poi_id, name, type, img, descr, latitude, longitude, state,flag
+        from sys_poi where 1=1
+        <if test="type == 'id'">
+        and id =#{value}
+        </if>
+        <if test="type == 'poi_id'">
+        and poi_id LIKE concat('%',#{value},'%')
+        </if>
+        <if test="type == 'name'">
+            and name LIKE concat('%',#{value},'%')
+        </if>
+        <if test="type == 'type'">
+            and type LIKE concat('%',#{value},'%')
+        </if>
+        <if test="type == 'flag'">
+            and flag LIKE concat('%',#{value},'%')
+        </if>
+        <if test="type == 'descr'">
+            and descr LIKE concat('%',#{value},'%')
+        </if>
+    </select>
+
+    <select id="idPoi" resultType="SysPoi" parameterType="String">
+        select id,poi_id, name, type, img, descr, latitude, longitude, state,flag
+        from sys_poi where id=#{id}
+    </select>
+
+    <update id="flagTrue" parameterType="String">
+        update sys_poi
+        <set>
+            flag='已更新'
+        </set>
+        where id = #{poiId}
+    </update>
+
+    <update id="flagFalse" parameterType="String">
+        update sys_poi
+        <set>
+            flag='已驳回'
+        </set>
+        where id = #{poiId}
+    </update>
+
+    <update id="flagAllFalse" parameterType="String">
+        update sys_poi
+        <set>
+            flag='已驳回'
+        </set>
+        where poi_id = #{poiId}
+    </update>
+</mapper> 

@@ -1,0 +1,162 @@
+<template>
+	<view class="page">
+
+		<unicloud-map 
+			ref="map"
+			:debug="false" 
+			loadtime="auto"
+			collection="opendb-poi" 
+			:where="where" 
+			:width="750" 
+			:height="heightCom" 
+			:latitude="latitude" 
+			:longitude="longitude" 
+			:scale="13" 
+			:poi-maximum="100"
+			:default-icon="defaultIcon"
+			:custom-icons="customIcons" 
+			:enable-scroll="true" 
+			:enable-zoom="true" 
+			:show-compass="true" 
+			:show-location="true" 
+		></unicloud-map>
+		
+		<view class="btn-box first">
+			<button @click="initData" size="mini" class="btn">初始化配送点</button>
+			<button @click="virtuallyTest" size="mini" class="btn">模拟配送（上报位置）</button>
+		</view>
+		<view class="btn-box">
+			<button @click="start" size="mini" class="btn" v-if="!isStart">开启监听</button>
+			<button @click="stop" size="mini" class="btn" v-else>暂停监听</button>	
+		</view>
+	</view>
+</template>
+
+<script>
+	
+	var timer;
+	
+	const uniMapCo = uniCloud.importObject('uni-map-co', {
+		customUI: true
+	});
+	const db = uniCloud.database();
+	const _ = db.command;
+	const category = "dynamics-001";
+
+	export default {
+		data() {
+			return {
+				longitude: 116.39747,
+				latitude: 39.908823,
+				where: {
+					category: category
+				},
+				defaultIcon: "/static/icon/default.png", // 默认图标
+				// 自定义图标
+				customIcons:[
+					{ type: "配送员", icon: "/static/icon/delivery.png" },
+					{ type: "目的地", icon: "/static/icon/to.png" }
+				],
+				isStart: false,
+				polyline:[],
+				isReady: false
+			}
+		},
+		onLoad() {
+			
+		},
+		onUnload() {
+			this.stop();
+		},
+		methods: {
+			async initData(){
+				let res = await uniMapCo.initDynamics001();
+				await this.refresh();
+				this.setPolyline(res.polyline);
+			},
+			// 虚拟配送测试
+			async virtuallyTest() {
+				// 启动监听
+				this.start();
+				// 先执行一次刷新，获得配送路线
+				await this.refresh();
+				const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+				let polyline = JSON.parse(JSON.stringify(this.polyline))
+				if (polyline && polyline.length > 0) {
+					for (let i = 0; i < polyline[0].points.length; i++) {
+						if (!this.isStart) {
+							break;
+						}
+						let item = polyline[0].points[i];
+						await sleep(500); // 模拟停顿
+						// 模拟上报当前的坐标
+						await uniMapCo.updateMyLocation({
+							longitude: item.longitude,
+							latitude: item.latitude,
+						});
+					}
+				}
+			},
+			// 刷新地图
+			async refresh() {
+				await this.$refs.map.refresh({
+					needIncludePoints: true
+				});
+				
+				let res = await uniMapCo.getPolyline();
+				if (res.end) {
+					await this.$refs.map.refresh({
+						needIncludePoints: true
+					});
+					this.stop();
+					this.setPolyline([]);
+				} else {
+					this.setPolyline(res.polyline);
+				}
+			},
+			// 开启监听
+			start() {
+				this.isStart = true;
+				if (timer) clearInterval(timer);
+				timer = setInterval(() => {
+					this.refresh();
+				}, 1000);
+			},
+			// 停止监听
+			stop() {
+				this.isStart = false;
+				if (timer) clearInterval(timer);
+			},
+			// 设置路线
+			setPolyline(polyline){
+				this.polyline = polyline;
+				this.$refs.map.setPolyline(polyline);
+			}
+		},
+		computed: {
+			heightCom() {
+				let systemInfo = uni.getSystemInfoSync();
+				return `${systemInfo.windowHeight - 100}px`;
+			}
+		}
+	}
+</script>
+
+<style lang="scss" scoped>
+	.page{
+		.btn-box{
+			margin: 10px;
+			/* #ifndef APP-NVUE */
+			display: flex;
+			/* #endif */
+			flex-direction: row;
+			.btn{
+				flex: 1;
+				margin: 0 5px;
+			}
+			&.first{
+				margin: 10px 10px 0 10px;
+			}
+		}
+	}
+</style>

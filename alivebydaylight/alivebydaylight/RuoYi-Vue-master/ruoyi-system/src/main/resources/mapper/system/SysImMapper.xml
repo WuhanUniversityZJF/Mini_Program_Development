@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.ruoyi.system.mapper.SysImMapper">
+
+    <resultMap type="SysIm" id="SysImResult">
+        <result property="id"       column="id"      />
+        <result property="content"       column="content"      />
+        <result property="type"     column="type"    />
+        <result property="pic"     column="pic"    />
+    </resultMap>
+
+    <select id="queryIm" resultType="SysIm">
+        select id,content,type,pic
+        from sys_im order by time asc
+    </select>
+
+    <insert id="addIm" parameterType="SysIm">
+        insert into sys_im(id,content,type,pic)values(#{id},#{content},#{type},#{pic})
+    </insert>
+
+</mapper> 
