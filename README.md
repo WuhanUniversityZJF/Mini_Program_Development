@@ -1,2 +1,6 @@
-# Mini_Program_Development
-2024年10月至12月期间，我开发了一款基于N层架构的微信小程序"check@collect"，实现了POI数据采集与核验的全生命周期管理。后端采用Spring Boot构建实体类、控制器、业务服务及数据访问层，集成Redis缓存与安全机制提升性能；前端基于Vue设计界面并接入腾讯地图API实现路径规划功能，最终将系统部署至腾讯云，结合MySQL数据库保障了可扩展性与数据持久化。
+WeChat Mini Program Development - check@collect  
+10/2024-12/2024  
+	Developed a WeChat mini program based on N-tier architecture, implementing a full POI data collection and verification workflow covering the entire data lifecycle  
+	Built backend modules, including entity classes, controllers, business services, and data access layers, and integrated Redis caching and security mechanisms to enhance performance and stability  
+	Designed frontend pages using Vue and integrated Tencent Map API for route planning and navigation features  
+	Deployed Spring Boot backend, Redis, and MySQL to Tencent Cloud for system scalability and data persistence
